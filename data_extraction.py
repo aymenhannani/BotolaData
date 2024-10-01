@@ -14,7 +14,7 @@ def fetch_competition_teams(season, headers):
     Returns:
     list: A list of team dictionaries.
     """
-    competition_url = 'http://localhost:8000/competitions/MAR1/clubs?season_id=' + season
+    competition_url = 'http://transfermarkt_api:8000/competitions/MAR1/clubs?season_id=' + season
     response = requests.get(competition_url, headers=headers)
 
     if response.status_code == 200:
@@ -39,7 +39,7 @@ def fetch_team_players(team_id, team_name, season, headers):
     Returns:
     DataFrame: A DataFrame containing player data.
     """
-    players_url = f'http://localhost:8000/clubs/{team_id}/players?season_id={season}'
+    players_url = f'http://transfermarkt_api:8000/clubs/{team_id}/players?season_id={season}'
     response = requests.get(players_url, headers=headers)
 
     if response.status_code == 200:
