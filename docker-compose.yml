@@ -10,6 +10,9 @@ services:
       - transfermarkt_api
     networks:
       - app-network
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONPATH=/app
     volumes:
       - ./:/app  # For live code reloading during development
 
@@ -20,9 +23,11 @@ services:
       - "8000:8000"
     networks:
       - app-network
+    environment:
+      - DASH_DEBUG_MODE=False
     volumes:
       - ./transfermarkt-api:/app  # For live code reloading if needed
 
 networks:
   app-network:
-      driver: bridge
+      driver : bridge 

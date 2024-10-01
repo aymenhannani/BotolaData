@@ -1,7 +1,21 @@
-# data_extraction.py
-
 import requests
 import pandas as pd
+import concurrent.futures
+import asyncio
+
+def fetch_team_data(team_id, team_name, season, headers):
+    """
+    Fetches players for a given team in a specific season.
+    This function is used in parallel execution.
+    """
+    players_url = f'https://localhost:8000/clubs/{team_id}/players?season_id={season}'
+    response = requests.get(players_url, headers=headers)
+    if response.status_code == 200:
+        players_data = response.json().get('players', [])
+        return pd.DataFrame(players_data)  # Return DataFrame for consistency
+    else:
+        print(f"Failed to fetch players for {team_name} in season {season}. Status code: {response.status_code}")
+        return pd.DataFrame()
 
 def fetch_competition_teams(season, headers):
     """
@@ -14,7 +28,7 @@ def fetch_competition_teams(season, headers):
     Returns:
     list: A list of team dictionaries.
     """
-    competition_url = 'http://transfermarkt_api:8000/competitions/MAR1/clubs?season_id=' + season
+    competition_url = f'http://localhost:8000/competitions/MAR1/clubs?season_id={season}'
     response = requests.get(competition_url, headers=headers)
 
     if response.status_code == 200:
@@ -26,28 +40,61 @@ def fetch_competition_teams(season, headers):
 
     return teams
 
-def fetch_team_players(team_id, team_name, season, headers):
+def fetch_team_players_parallel(teams, season, headers):
     """
-    Fetches players for a given team and season.
+    Fetches players for all teams in parallel using ThreadPoolExecutor.
 
     Parameters:
-    team_id (int): The team's ID.
-    team_name (str): The team's name.
+    teams (list): List of team dictionaries containing team_id and team_name.
     season (str): The season year.
     headers (dict): Headers for the HTTP request.
 
     Returns:
-    DataFrame: A DataFrame containing player data.
+    DataFrame: A DataFrame containing player data for all teams.
     """
-    players_url = f'http://transfermarkt_api:8000/clubs/{team_id}/players?season_id={season}'
-    response = requests.get(players_url, headers=headers)
+    all_players_data = []
 
-    if response.status_code == 200:
-        players_data = response.json()
-        df_players = pd.DataFrame(players_data.get('players', []))
-        df_players['Team'] = team_name
-        df_players['Season'] = season
-        return df_players
+    # Use ThreadPoolExecutor to fetch player data in parallel for all teams
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        futures = {
+            executor.submit(fetch_team_data, teams['id'], teams['name'], season, headers): teams['name']
+        }
+
+        # As the futures complete, append the results to the all_players_data list
+        for future in concurrent.futures.as_completed(futures):
+            team_name = futures[future]
+            try:
+                team_players_df = future.result()  # This returns the DataFrame from fetch_team_data
+                if not team_players_df.empty:
+                    team_players_df['Team'] = team_name  # Add team name to the DataFrame
+                    team_players_df['Season'] = season   # Add season to the DataFrame
+                    all_players_data.append(team_players_df)
+            except Exception as e:
+                print(f"Error fetching players for {team_name}: {e}")
+
+    # Concatenate all data into a single DataFrame
+    if all_players_data:
+        return pd.concat(all_players_data, ignore_index=True)
     else:
-        print(f"Failed to fetch players for {team_name} in season {season}. Status code: {response.status_code}")
         return pd.DataFrame()
+
+# Example of calling fetch_competition_teams and fetch_team_players_parallel
+def get_all_season_data():
+    headers = {'accept': 'application/json'}
+    list_seasons = [str(i) for i in range(2015, 2025)]
+    all_season_data = pd.DataFrame()
+
+    for season in list_seasons:
+        # Fetch the teams for the season
+        teams = fetch_competition_teams(season, headers)
+        print(teams)
+
+        # Fetch the players in parallel for all teams in the season
+        #season_data = fetch_team_players_parallel(teams, season, headers)
+
+        # Append the season data to the all_season_data DataFrame
+        if not season_data.empty:
+            all_season_data = pd.concat([all_season_data, season_data], ignore_index=True)
+
+    return all_season_data

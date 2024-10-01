@@ -5,7 +5,7 @@ from dash import dcc, html, callback, Output, Input
 import dash_bootstrap_components as dbc
 import pandas as pd
 import plotly.express as px
-from data_extraction import fetch_competition_teams, fetch_team_players
+from data_extraction import fetch_competition_teams, fetch_team_players_parallel
 from data_processing import clean_player_data, aggregate_all_data
 
 # Initialize Dash app
@@ -29,7 +29,7 @@ def get_data():
         for team in teams:
             team_id = team['id']
             team_name = team['name']
-            df_players = fetch_team_players(team_id, team_name, season, headers)
+            df_players = fetch_team_players_parallel(team, season, headers)
             api_request_counter += 1  # Count API request for players
             if not df_players.empty:
                 df_players = clean_player_data(df_players)
