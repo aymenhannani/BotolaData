@@ -28,7 +28,7 @@ def fetch_competition_teams(season, headers):
     Returns:
     list: A list of team dictionaries.
     """
-    competition_url = f'http://localhost:8000/competitions/MAR1/clubs?season_id={season}'
+    competition_url = f'http://transfermarkt-api:8000/competitions/MAR1/clubs?season_id={season}'
     response = requests.get(competition_url, headers=headers)
 
     if response.status_code == 200:

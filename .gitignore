@@ -1,0 +1,7 @@
+#cache
+__pycache__/
+
+#Folders
+botola_env/
+.venv/
+New Folder/
