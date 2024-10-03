@@ -8,7 +8,7 @@ def fetch_team_data(team_id, team_name, season, headers):
     Fetches players for a given team in a specific season.
     This function is used in parallel execution.
     """
-    players_url = f'https://localhost:8000/clubs/{team_id}/players?season_id={season}'
+    players_url = f'https://transfermarkt-api:8000/clubs/{team_id}/players?season_id={season}'
     response = requests.get(players_url, headers=headers)
     if response.status_code == 200:
         players_data = response.json().get('players', [])
@@ -54,24 +54,16 @@ def fetch_team_players_parallel(teams, season, headers):
     """
     all_players_data = []
 
-    # Use ThreadPoolExecutor to fetch player data in parallel for all teams
-
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        futures = {
-            executor.submit(fetch_team_data, teams['id'], teams['name'], season, headers): teams['name']
-        }
-
-        # As the futures complete, append the results to the all_players_data list
-        for future in concurrent.futures.as_completed(futures):
-            team_name = futures[future]
-            try:
-                team_players_df = future.result()  # This returns the DataFrame from fetch_team_data
-                if not team_players_df.empty:
-                    team_players_df['Team'] = team_name  # Add team name to the DataFrame
-                    team_players_df['Season'] = season   # Add season to the DataFrame
-                    all_players_data.append(team_players_df)
-            except Exception as e:
-                print(f"Error fetching players for {team_name}: {e}")
+    for team in teams :
+        team_name = team["name"]
+        try:
+            team_players_df = fetch_team_data(team["id"],team["name"],season,headers) # This returns the DataFrame from fetch_team_data
+            if not team_players_df.empty:
+                team_players_df['Team'] = team_name  # Add team name to the DataFrame
+                team_players_df['Season'] = season   # Add season to the DataFrame
+                all_players_data.append(team_players_df)
+        except Exception as e:
+            print(f"Error fetching players for {team_name}: {e}")
 
     # Concatenate all data into a single DataFrame
     if all_players_data:
@@ -91,7 +83,7 @@ def get_all_season_data():
         print(teams)
 
         # Fetch the players in parallel for all teams in the season
-        #season_data = fetch_team_players_parallel(teams, season, headers)
+        season_data = fetch_team_players_parallel(teams, season, headers)
 
         # Append the season data to the all_season_data DataFrame
         if not season_data.empty:
