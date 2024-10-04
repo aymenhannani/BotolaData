@@ -15,6 +15,7 @@ EXPOSE 8050
 
 # Define environment variable to disable Dash debug mode in production
 ENV DASH_DEBUG_MODE=False
+ENV DASH_RUN_HOST=0.0.0.0
 
 # Run the app when the container launches
 CMD ["gunicorn", "--bind", "0.0.0.0:8050", "app:server"]

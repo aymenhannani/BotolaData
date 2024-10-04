@@ -8,7 +8,7 @@ def fetch_team_data(team_id, team_name, season, headers):
     Fetches players for a given team in a specific season.
     This function is used in parallel execution.
     """
-    players_url = f'https://transfermarkt-api:8000/clubs/{team_id}/players?season_id={season}'
+    players_url = f'https://localhost:8000/clubs/{team_id}/players?season_id={season}'
     response = requests.get(players_url, headers=headers)
     if response.status_code == 200:
         players_data = response.json().get('players', [])
@@ -28,15 +28,17 @@ def fetch_competition_teams(season, headers):
     Returns:
     list: A list of team dictionaries.
     """
-    competition_url = f'http://transfermarkt-api:8000/competitions/MAR1/clubs?season_id={season}'
+    competition_url = f'http://localhost:8000/competitions/MAR1/clubs?season_id={season}'
     response = requests.get(competition_url, headers=headers)
 
     if response.status_code == 200:
         competition_data = response.json()
         teams = competition_data.get('clubs', [])
+        print(teams)
     else:
         print(f"Failed to fetch teams for season {season}. Status code: {response.status_code}")
         teams = []
+
 
     return teams
 

@@ -5,14 +5,16 @@ services:
     build:
       context: .
     ports:
-      - "8000:8000"
+      - "8050:8050"
     depends_on:
       - transfermarkt_api
     networks:
-      - app-network
+      - botola_app-network
     environment:
       - PYTHONUNBUFFERED=1
       - PYTHONPATH=/app
+      - TRANSFERMARKT_API_URL=http://transfermarkt-api:8000  # Environment variable to connect to the transfermarkt-api service
+
     volumes:
       - ./:/app  # For live code reloading during development
 
@@ -22,9 +24,10 @@ services:
     ports:
       - "8000:8000"
     networks:
-      - app-network
+      - botola_app-network
     environment:
-      - DASH_DEBUG_MODE=False
+      - FLASK_DEBUG_MODE=False
+      - ENV FLASK_RUN_HOST=0.0.0.0
     volumes:
       - ./transfermarkt-api:/app  # For live code reloading if needed
 
